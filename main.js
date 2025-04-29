@@ -128,7 +128,6 @@ async function takeCompositedScreenshot(
       }
     });
 
-
     console.log(`[${validatedTargetUrl}] Navigating to target...`);
     try {
       await page.goto(validatedTargetUrl, {
@@ -238,7 +237,7 @@ async function takeCompositedScreenshot(
     });
     console.log(`[${validatedTargetUrl}] HTML content loaded.`);
 
-x    try {
+    try {
       console.log(`[${validatedTargetUrl}] Waiting for final image element...`);
       await page.waitForSelector("img#screenshot", {
         visible: true,
@@ -296,7 +295,7 @@ app.get("/screenshot", async (req, res) => {
       height
     );
     res.setHeader("Content-Type", "image/jpeg");
-    res.setHeader("Cache-Control", "public, max-age=3600"); 
+    res.setHeader("Cache-Control", "public, max-age=3600");
     res.send(imageBuffer);
     console.log(`Successfully sent screenshot for ${validatedUrl}`);
   } catch (error) {
