@@ -56,11 +56,9 @@ async function takeCompositedScreenshot(
   viewportWidth,
   viewportHeight
 ) {
-  // --- Select a Random Background URL ---
   const randomIndex = Math.floor(Math.random() * backgroundUrls.length);
   const selectedBackgroundUrl = backgroundUrls[randomIndex];
 
-  // URL validation happens in the route handler, assuming valid URLs here
   const validatedTargetUrl = targetUrl; // Already validated
   const validatedBgImageUrl = new URL(selectedBackgroundUrl).toString(); // Assume internal list is valid
 
@@ -93,11 +91,9 @@ async function takeCompositedScreenshot(
         `[${validatedTargetUrl}] Error fetching background:`,
         bgError
       );
-      // Rethrow to be caught by the main try/catch
       throw new Error(`Background image fetch failed: ${bgError.message}`);
     }
 
-    // --- 2. Launch Puppeteer & Screenshot Target ---
     console.log(`[${validatedTargetUrl}] Launching browser...`);
     browser = await puppeteer.launch({
       headless: true, // Use 'new' for newer Puppeteer versions if preferred
@@ -114,7 +110,6 @@ async function takeCompositedScreenshot(
       deviceScaleFactor: 1,
     });
 
-    // Inject CSS
     await page.evaluateOnNewDocument(() => {
       const css = `*,*::before,*::after{transition-property:none!important;transition-duration:0s!important;transition-delay:0s!important;animation-name:none!important;animation-duration:0s!important;animation-delay:0s!important;animation-iteration-count:1!important;scroll-behavior:auto!important}::-webkit-scrollbar{display:none}body{-ms-overflow-style:none;scrollbar-width:none}`;
       const style = document.createElement("style");
@@ -126,13 +121,13 @@ async function takeCompositedScreenshot(
     await page.setRequestInterception(true);
     page.on("request", (interceptedRequest) => {
       const requestUrl = interceptedRequest.url();
-      // Block specific problematic scripts if needed
       if (requestUrl.includes("https://runtime.fine.dev/error-overlay.js")) {
         interceptedRequest.abort();
       } else {
         interceptedRequest.continue();
       }
     });
+
 
     console.log(`[${validatedTargetUrl}] Navigating to target...`);
     try {
@@ -144,7 +139,6 @@ async function takeCompositedScreenshot(
       console.warn(
         `[${validatedTargetUrl}] Navigation with networkidle0 failed (may be expected for SPAs): ${gotoError.message}. Trying load...`
       );
-      // Fallback or alternative wait strategy if networkidle0 fails often
       try {
         await page.goto(validatedTargetUrl, {
           waitUntil: "load",
@@ -244,8 +238,7 @@ async function takeCompositedScreenshot(
     });
     console.log(`[${validatedTargetUrl}] HTML content loaded.`);
 
-    // Wait for final image element
-    try {
+x    try {
       console.log(`[${validatedTargetUrl}] Waiting for final image element...`);
       await page.waitForSelector("img#screenshot", {
         visible: true,
@@ -256,7 +249,6 @@ async function takeCompositedScreenshot(
       console.warn(
         `[${validatedTargetUrl}] Warning: Waiting for img#screenshot timed out. Taking screenshot anyway.`
       );
-      // await delay(250); // Optional fallback delay
     }
 
     console.log(`[${validatedTargetUrl}] Taking final screenshot...`);
@@ -277,10 +269,8 @@ async function takeCompositedScreenshot(
   }
 }
 
-// --- Express Route Handler ---
 app.get("/screenshot", async (req, res) => {
   const url = req.query.url;
-  // Use || DEFAULT_VIEWPORT_WIDTH to ensure a number even if parsing fails or query is missing
   const width = parseInt(req.query.width || "") || DEFAULT_VIEWPORT_WIDTH;
   const height = parseInt(req.query.height || "") || DEFAULT_VIEWPORT_HEIGHT;
 
@@ -306,7 +296,7 @@ app.get("/screenshot", async (req, res) => {
       height
     );
     res.setHeader("Content-Type", "image/jpeg");
-    res.setHeader("Cache-Control", "public, max-age=3600"); // Optional: Cache for 1 hour
+    res.setHeader("Cache-Control", "public, max-age=3600"); 
     res.send(imageBuffer);
     console.log(`Successfully sent screenshot for ${validatedUrl}`);
   } catch (error) {
@@ -314,7 +304,7 @@ app.get("/screenshot", async (req, res) => {
       `[${validatedUrl}] Failed to process screenshot request:`,
       error
     );
-    // Avoid sending detailed internal errors to the client in production
+
     res
       .status(500)
       .send(
@@ -329,7 +319,6 @@ app.get("/", (req, res) => {
   res.send("Screenshot Service is running. Use /screenshot?url=...");
 });
 
-// --- Start Server ---
 app.listen(port, () => {
   console.log(`Screenshot server listening on http://localhost:${port}`);
 });
