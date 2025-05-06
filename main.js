@@ -97,7 +97,8 @@ async function takeCompositedScreenshot(
     console.log(`[${validatedTargetUrl}] Launching browser...`);
     browser = await puppeteer.launch({
       headless: true, // Use 'new' for newer Puppeteer versions if preferred
-      args: ["--no-sandbox", "--disable-setuid-sandbox"], // Good practice for servers
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      ignoreDefaultArgs: ["--disable-extensions"],
     });
     const page = await browser.newPage();
 
